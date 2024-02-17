@@ -1,0 +1,4 @@
+patient(1, 'Tomas', 39, 'masculino').
+patient(2, 'Junior', 44, 'masculino').
+patient(3, 'Testao', 38, 'feminino').
+patient(4, 'teste', 21, 'masculino').
