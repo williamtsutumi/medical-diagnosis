@@ -44,7 +44,6 @@ get_max_id(Max) :-
     max(Patients, Max).
 
 max([], Max) :- Max is 0.
-max([patient(Id, _, _, _)], Max) :- Max is Id.
 max([patient(Id, _, _, _) | R], Max) :-
     max(R, RestMax),
     (RestMax > Id ->

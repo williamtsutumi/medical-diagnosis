@@ -8,3 +8,5 @@ patient(9, 'trtrt', 4, 'feminino').
 patient(10, 'iiii', 87, 'feminino').
 patient(11, 'asdasdasd', 2, 'feminino').
 patient(2, 'Eu', 23, 'feminino').
+patient(12, 'Felina', 43, 'feminino').
+patient(13, 'Patrick', 31, 'masculino').
