@@ -2,71 +2,53 @@ gender('masculino').
 gender('feminino').
 
 
-create(Id, Name, Age, Gender) :-
-    gender(Gender),
-    open('patients.txt', append, Stream),
-    format(Stream, 'patient(~w, \'~w\', ~w, \'~w\').\n', [Id, Name, Age, Gender]),
+save_patients(FileName) :-
+    open(FileName, write, Stream),
+    write(Stream, ':- dynamic(patient/4).\n'),
+    write_patients(Stream),
     close(Stream).
 
+write_patients(Stream) :-
+    findall(patient(Id, Name, Age, Gender), patient(Id, Name, Age, Gender), Patients),
+    write_patients_list(Patients, Stream).
 
-% E true caso 'Num' seja igual a quantidade de pacientes cadastrados.
-read_patients_file(File, Num) :-
-    open(File, read, Stream),
-    read_patient_facts(Stream, Count),
-    !,
-    close(Stream),
-    Num is Count.
-
-read_patient_facts(Stream, Count) :-
-    read_patient_facts(Stream, 0, Count).
-
-read_patient_facts(Stream, Acc, Count) :-
-    repeat,
-    read(Stream, Term),
-    (   Term \= end_of_file -> assert(Term),
-        NewAcc is Acc + 1,
-        read_patient_facts(Stream, NewAcc, Count)
-    ;   Count is Acc
-    ).
+write_patients_list([], _).
+write_patients_list([patient(Id, Nome, Idade, Genero) | Rest], Stream) :-
+    format(atom(Text), 'patient(~w, \'~w\', ~w, \'~w\').\n', [Id, Nome, Idade, Genero]),
+    write(Stream, Text),
+    write_patients_list(Rest, Stream).
 
 
-read_patients(PatientsString, Count) :-
-    read_patients(PatientsString, Count, 'patients.txt').
-    
-read_patients(PatientsString, Count, File) :-
-    read_patients_file(File, Count),
-    findall(PatientString,
-        (   patient(Id, Name, Age, Gender),
-            format(atom(PatientString), 'Id: ~w, Name: ~w, Age: ~w, Gender: ~w\n', [Id, Name, Age, Gender])
-        ),
-        PatientStrings),
-    atomic_list_concat(PatientStrings, '\n', PatientsString).
+save_patient(FileName, Id, Nome, Idade, Genero) :-
+    Id =:= -1,
+    get_max_id(Max),
+    NewId is Max + 1,
+    assert(patient(NewId, Nome, Idade, Genero)),
+    save_patients(FileName).
+
+save_patient(FileName, Id, Nome, Idade, Genero) :-
+    Id =\= -1,
+    delete_patient(Id),
+    consult(FileName),
+    assert(patient(Id, Nome, Idade, Genero)),
+    save_patients(FileName).
+
+delete_patient(IdString) :-
+    (integer(IdString) -> Id is IdString; atom_number(IdString, Id)),
+    retract(patient(Id, _, _, _)),
+    save_patients('patients.txt').
 
 
-update(Name, NewAge, NewGender) :-
-    open('patients.txt', read, ReadStream),
-    open('temp.txt', write, WriteStream),
-    repeat,
-    read_line_to_codes(ReadStream, Line),
-    Line = end_of_file,
-    !,
-    close(ReadStream),
-    close(WriteStream),
-    delete_file('patients.txt'),
-    rename_file('temp.txt', 'patients.txt'),
-    create(Name, NewAge, NewGender).
+get_max_id(Max) :-
+    findall(patient(Id, Name, Age, Gender), patient(Id, Name, Age, Gender), Patients),
+    max(Patients, Max).
 
-
-delete(Name) :-
-    open('patients.txt', read, ReadStream),
-    open('temp.txt', write, WriteStream),
-    repeat,
-    read_line_to_codes(ReadStream, Line),
-    Line = end_of_file,
-    !,
-    close(ReadStream),
-    close(WriteStream),
-    delete_file('patients.txt'),
-    rename_file('temp.txt', 'patients.txt').
+max([], Max) :- Max is 0.
+max([patient(Id, _, _, _)], Max) :- Max is Id.
+max([patient(Id, _, _, _) | R], Max) :-
+    max(R, RestMax),
+    (RestMax > Id ->
+        Max is RestMax
+      ; Max is Id).
 
 

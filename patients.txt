@@ -1,4 +1,10 @@
-patient(1, 'Tomas', 39, 'masculino').
-patient(2, 'Junior', 44, 'masculino').
-patient(3, 'Testao', 38, 'feminino').
-patient(4, 'teste', 21, 'masculino').
+:- dynamic(patient/4).
+patient(3, 'aaaa', 23, 'feminino').
+patient(4, 'asd', 22, 'masculino').
+patient(6, 'fafa', 2, 'masculino').
+patient(7, 'tete', 3, 'feminino').
+patient(8, 'gaga3', 33333, 'feminino').
+patient(9, 'trtrt', 4, 'feminino').
+patient(10, 'iiii', 87, 'feminino').
+patient(11, 'asdasdasd', 2, 'feminino').
+patient(2, 'Eu', 23, 'feminino').
