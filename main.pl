@@ -2,11 +2,15 @@
 :- include('patients_crud.pl').
 
 
+:- dynamic(patient/4).
+:- dynamic(sintoma_paciente/2).
 
 main :-
     consult('patients.txt'),
+    consult('doencas.pl'),
 
     new(MainDialog, dialog('Register')),
+    send(MainDialog, scrollbars, both),
 
     new(BtnCadastro, button('Cadastrar paciente')),
         ActionCadastro = message(@prolog, cadastro,
@@ -22,24 +26,31 @@ main :-
         send(BtnEdit, message, ActionEdit),
     send(MainDialog, append, BtnEdit),
 
+    new(BtnDiagnostico, button('Diagnosticar')),
+        ActionDiagnostico = message(@prolog, diagnosticar,
+                                    IdSelected?selection),
+        send(BtnDiagnostico, message, ActionDiagnostico),
+    send(MainDialog, append, BtnDiagnostico),
+
     new(BtnDelete, button('Deletar')),
-        ActionDelete = message(@prolog, delete,
+        ActionDelete = message(@prolog, on_delete_click,
                                MainDialog,
                                IdSelected?selection),
         send(BtnDelete, message, ActionDelete),
     send(MainDialog, append, BtnDelete),
-
+    
     list_patients(MainDialog),
 
     send(MainDialog, open).
 
 
+
 cadastro(MainDialog) :-
     cadastro(MainDialog, '-1').
 
-
 cadastro(MainDialog, IdString) :-
     new(Dialog, dialog('Cadastro de paciente')),
+    send(Dialog, scrollbars, both),
     send(Dialog, append, new(Nome, text_item(nome))),
     send(Dialog, append, new(Idade, text_item(idade))),
 
@@ -54,25 +65,42 @@ cadastro(MainDialog, IdString) :-
         send(Genero, selection, Gender)
     ; true),
 
-    send(Dialog, append, 
-        button(create, message(@prolog, on_create_click,
+    send(Dialog, append, new(T, text('Sintomas'))),
+    send(T, font, bold),
+    Selections = [],
+    forall(sintoma(S), (
+        send(Dialog, append, new(Menu, menu(., marked))), 
+        send(Menu, multiple_selection, @on),
+
+        new(Item, menu_item(S)),
+        send(Item, message, message(@prolog, update_selection, S, Selections)),
+
+        send(Menu, append, Item)
+    )),
+
+    new(BtnSalvar, button('Salvar')),
+    send(BtnSalvar, message, message(@prolog, on_create_click,
                                MainDialog,
                                Dialog,
                                'patients.txt',
                                Id,
                                Nome?selection,
                                Idade?selection,
-                               Genero?selection))),
+                               Genero?selection,
+                               Selections)),
+    send(Dialog, append, BtnSalvar),
 
     send(Dialog, open).
 
+update_selection(Label, Selections) :-
+    writeln(Label),
+    append(Selections, [Label], Selections).
 
-on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero) :-
-    save_patient(FileName, Id, Nome, Idade, Genero),
+on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero, Simp) :-
+    save_patient(FileName, Id, Nome, Idade, Genero, Simp),
     send(MainDialog, destroy),
     send(Dialog, destroy),
     main.
-
 
 list_patients(MainDialog) :-
     retractall(patient(_,_,_,_)),
@@ -88,7 +116,8 @@ get_patients_string([patient(Id, Nome, Idade, Genero) | R], String) :-
     atom_concat(Text, RestString, String).
 
 
-delete(MainDialog, Id) :-
+
+on_delete_click(MainDialog, Id) :-
     delete_patient(Id),
     send(MainDialog, destroy),
     main.
