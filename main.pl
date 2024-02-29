@@ -1,4 +1,5 @@
 :- use_module(library(pce)).
+:- use_module(library(pce_style_item)).
 :- include('patients_crud.pl').
 
 
@@ -14,7 +15,7 @@ main :-
 
     new(BtnCadastro, button('Cadastrar paciente')),
         ActionCadastro = message(@prolog, cadastro,
-                                 MainDialog),
+                                 MainDialog, '-1'),
         send(BtnCadastro, message, ActionCadastro),
     send(MainDialog, append, BtnCadastro),
 
@@ -44,10 +45,6 @@ main :-
     send(MainDialog, open).
 
 
-
-cadastro(MainDialog) :-
-    cadastro(MainDialog, '-1').
-
 cadastro(MainDialog, IdString) :-
     new(Dialog, dialog('Cadastro de paciente')),
     send(Dialog, scrollbars, both),
@@ -67,16 +64,10 @@ cadastro(MainDialog, IdString) :-
 
     send(Dialog, append, new(T, text('Sintomas'))),
     send(T, font, bold),
-    Selections = [],
-    forall(sintoma(S), (
-        send(Dialog, append, new(Menu, menu(., marked))), 
-        send(Menu, multiple_selection, @on),
 
-        new(Item, menu_item(S)),
-        send(Item, message, message(@prolog, update_selection, S, Selections)),
-
-        send(Menu, append, Item)
-    )),
+    send(Dialog, append, new(List, list_browser)), 
+    forall(sintoma(S), send(List, append, dict_item(S, S))),
+    send(List, multiple_selection, @on),
 
     new(BtnSalvar, button('Salvar')),
     send(BtnSalvar, message, message(@prolog, on_create_click,
@@ -87,20 +78,23 @@ cadastro(MainDialog, IdString) :-
                                Nome?selection,
                                Idade?selection,
                                Genero?selection,
-                               Selections)),
+                               List)),
     send(Dialog, append, BtnSalvar),
-
     send(Dialog, open).
 
-update_selection(Label, Selections) :-
-    writeln(Label),
-    append(Selections, [Label], Selections).
+on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero, List) :-
+    get(List, selection, SelectionChain),
+    chain_list(SelectionChain, References),
+    maplist(get_item_label, References, SelectedItems),
 
-on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero, Simp) :-
-    save_patient(FileName, Id, Nome, Idade, Genero, Simp),
+    save_patient(FileName, Id, Nome, Idade, Genero, SelectedItems),
     send(MainDialog, destroy),
     send(Dialog, destroy),
     main.
+
+get_item_label(Reference, Label) :-
+    get(Reference, label, Label).
+
 
 list_patients(MainDialog) :-
     retractall(patient(_,_,_,_)),

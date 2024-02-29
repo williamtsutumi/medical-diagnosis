@@ -1,4 +1,3 @@
-patient(13, 'Patrick', 31, 'masculino').
 patient(3, 'Armelia', 23, 'feminino').
 patient(4, 'Michel', 22, 'masculino').
 patient(6, 'Enzo', 2, 'masculino').
@@ -7,16 +6,11 @@ patient(8, 'Regina', 71, 'feminino').
 patient(9, 'Nauru', 4, 'feminino').
 patient(10, 'Maria', 87, 'feminino').
 patient(12, 'Felina', 56, 'feminino').
-patient(2, 'Raquel', 27, 'feminino').
-patient(30, '1', 1, 'masculino').
-patient(31, '1', 1, 'masculino').
-patient(32, '1q1', 1, 'masculino').
 patient(11, 'Bruno', 2, 'masculino').
-patient(33, '12', 12, 'masculino').
-patient(34, '123', 123, 'masculino').
-patient(35, '123', 123, 'masculino').
-patient(36, 'aa', a, 'masculino').
-patient(37, 'aa', a, 'masculino').
-patient(38, 'aa', a, 'masculino').
-patient(39, 'aa', a, 'masculino').
-patient(40, 'aa', a, 'masculino').
+patient(2, 'Raquel', 27, 'feminino').
+patient(13, '1', 1, 'masculino').
+patient(20, '1', 1, 'masculino').
+sintoma_paciente(20, 'chiado ao respirar').
+sintoma_paciente(20, 'confusao').
+sintoma_paciente(20, 'conjuntivite').
+sintoma_paciente(20, 'coriza').
