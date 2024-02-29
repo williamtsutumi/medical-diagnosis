@@ -1,5 +1,4 @@
 :- use_module(library(pce)).
-:- use_module(library(pce_style_item)).
 :- include('patients_crud.pl').
 
 
@@ -110,10 +109,11 @@ get_patients_string([patient(Id, Nome, Idade, Genero) | R], String) :-
     atom_concat(Text, RestString, String).
 
 
-
 on_delete_click(MainDialog, Id) :-
     delete_patient(Id),
     send(MainDialog, destroy),
     main.
 
 
+
+:- main.

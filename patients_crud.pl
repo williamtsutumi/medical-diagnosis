@@ -13,7 +13,6 @@ save_patient(FileName, Id, Nome, Idade, Genero, Sintomas) :-
 save_patient(FileName, Id, Nome, Idade, Genero, Sintomas) :-
     Id =\= -1,
     delete_patient(Id),
-    consult(FileName),
     assert(patient(Id, Nome, Idade, Genero)),
     retractall(sintoma_paciente(Id, _)),
     assert_symptoms(Id, Sintomas),
