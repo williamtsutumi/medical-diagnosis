@@ -12,6 +12,9 @@ main :-
     new(MainDialog, dialog('Register')),
     send(MainDialog, scrollbars, both),
 
+    send(MainDialog, append, new(T, text('O resultado do protótipo é apenas informativo e o paciente deve\nconsultar um médico para obter um diagnóstico correto e preciso.'))),
+    send(T, font, bold),
+
     new(BtnCadastro, button('Cadastrar paciente')),
         ActionCadastro = message(@prolog, cadastro,
                                  MainDialog, '-1'),
@@ -27,7 +30,7 @@ main :-
     send(MainDialog, append, BtnEdit),
 
     new(BtnDiagnostico, button('Diagnosticar')),
-        ActionDiagnostico = message(@prolog, diagnosticar,
+        ActionDiagnostico = message(@prolog, on_diagnostico_click,
                                     IdSelected?selection),
         send(BtnDiagnostico, message, ActionDiagnostico),
     send(MainDialog, append, BtnDiagnostico),
@@ -46,7 +49,6 @@ main :-
 
 cadastro(MainDialog, IdString) :-
     new(Dialog, dialog('Cadastro de paciente')),
-    send(Dialog, scrollbars, both),
     send(Dialog, append, new(Nome, text_item(nome))),
     send(Dialog, append, new(Idade, text_item(idade))),
 
@@ -115,5 +117,35 @@ on_delete_click(MainDialog, Id) :-
     main.
 
 
+on_diagnostico_click(IdAtom) :-
+    atom_number(IdAtom, Id),
+    patient(Id, Nome, Idade, Genero),
+
+    new(Dialog, dialog('Diagnostico')),
+    format(atom(PatString), 'Paciente:\nNome: ~w\nIdade: ~w\nGenero: ~w', [Nome, Idade, Genero]),
+    send(Dialog, append, new(_, text(PatString))),
+
+    findall(S, sintoma_paciente(Id, S), Sintomas),
+    send(Dialog, append, new(T, text('Sintomas:'))),
+    send(T, font, bold),
+    atomic_list_concat(Sintomas, '\n', SintomaText),
+    send(Dialog, append, new(_, text(SintomaText))),
+
+    diagnostico(Idade, Genero, Sintomas, Result),
+    format_sintomas(Result, DiagResultList),
+    atomic_list_concat(DiagResultList, '\n', Probs),
+    atomic_concat('Probabilidades (%):\n', Probs, DiagText),
+    send(Dialog, append, new(_, text(DiagText))),
+
+    send(Dialog, open).
+
+format_sintomas([], []).
+format_sintomas([[D, Prob] | R], Result) :-
+    format_sintomas(R, RestResult),
+    format(atom(Text), '~w: ~w', [D, Prob]),
+    append(RestResult, [Text], Result).
+
 
 :- main.
+
+

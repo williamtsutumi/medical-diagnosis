@@ -50,18 +50,6 @@ delete_patient(IdString) :-
     save_patients('patients.txt').
 
 
-get_max_id(Max) :-
-    findall(patient(Id, Name, Age, Gender), patient(Id, Name, Age, Gender), Patients),
-    max(Patients, Max).
-
-max([], Max) :- Max is 0.
-max([patient(Id, _, _, _) | R], Max) :-
-    max(R, RestMax),
-    (RestMax > Id ->
-        Max is RestMax
-      ; Max is Id).
-
-
 save_symptoms(FileName) :-
     open(FileName, append, Stream),
     write_symptoms(Stream),
@@ -76,5 +64,18 @@ write_symp_list([sintoma_paciente(Id, S) | Rest], Stream) :-
     format(atom(Text), 'sintoma_paciente(~w, \'~w\').\n', [Id, S]),
     write(Stream, Text),
     write_symp_list(Rest, Stream).
+
+
+
+get_max_id(Max) :-
+    findall(patient(Id, Name, Age, Gender), patient(Id, Name, Age, Gender), Patients),
+    max(Patients, Max).
+
+max([], Max) :- Max is 0.
+max([patient(Id, _, _, _) | R], Max) :-
+    max(R, RestMax),
+    (RestMax > Id ->
+        Max is RestMax
+      ; Max is Id).
 
 
