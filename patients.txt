@@ -1,4 +1,3 @@
-patient(7, 'Valentina', 3, 'feminino').
 patient(8, 'Regina', 71, 'feminino').
 patient(9, 'Nauru', 4, 'feminino').
 patient(10, 'Maria', 87, 'feminino').
@@ -7,34 +6,22 @@ patient(11, 'Bruno', 2, 'masculino').
 patient(2, 'Raquel', 27, 'feminino').
 patient(3, 'Armelia', 23, 'feminino').
 patient(4, 'Michel', 22, 'masculino').
-patient(14, '1', 1, 'masculino').
-patient(13, 'teste', 1, 'masculino').
-patient(15, '1', 1, 'masculino').
-patient(16, '1', 1, 'masculino').
-patient(17, '1', 1, 'masculino').
 patient(6, 'Enzo', 2, 'masculino').
-patient(18, '1', 1, 'masculino').
-patient(19, 'test', 8, 'masculino').
 patient(20, 'Asmatico', 12, 'masculino').
 patient(21, 'Osteoporatico', 80, 'feminino').
 patient(22, 'Febre amareloso', 29, 'masculino').
 patient(23, 'Eu', 21, 'masculino').
+patient(24, 'Tudo', 50, 'masculino').
+patient(25, 'Armeno', 30, 'masculino').
+patient(7, 'Valentina', 3, 'feminino').
+patient(26, '1', 1, 'masculino').
+patient(27, '1', 1, 'masculino').
+patient(28, '1', 1, 'masculino').
+patient(29, '1', 1, 'masculino').
 sintoma_paciente(17, 'conjuntivite').
 sintoma_paciente(17, 'coriza').
 sintoma_paciente(6, 'calafrio').
 sintoma_paciente(6, 'chiado ao respirar').
-sintoma_paciente(18, 'calafrio').
-sintoma_paciente(18, 'chiado ao respirar').
-sintoma_paciente(18, 'confusao').
-sintoma_paciente(19, 'calafrio').
-sintoma_paciente(19, 'chiado ao respirar').
-sintoma_paciente(19, 'confusao').
-sintoma_paciente(19, 'conjuntivite').
-sintoma_paciente(19, 'coriza').
-sintoma_paciente(19, 'dificuldade de respirar').
-sintoma_paciente(19, 'dor muscular').
-sintoma_paciente(19, 'dor atras dos olhos').
-sintoma_paciente(19, 'dor de cabeca').
 sintoma_paciente(20, 'chiado ao respirar').
 sintoma_paciente(20, 'dificuldade de respirar').
 sintoma_paciente(20, 'tosse frequente').
@@ -48,3 +35,46 @@ sintoma_paciente(22, 'dor de cabeca').
 sintoma_paciente(22, 'dor muscular').
 sintoma_paciente(22, 'febre alta').
 sintoma_paciente(23, 'tosse frequente').
+sintoma_paciente(24, 'calafrio').
+sintoma_paciente(24, 'chiado ao respirar').
+sintoma_paciente(24, 'confusao').
+sintoma_paciente(24, 'conjuntivite').
+sintoma_paciente(24, 'coriza').
+sintoma_paciente(24, 'dificuldade de respirar').
+sintoma_paciente(24, 'dor muscular').
+sintoma_paciente(24, 'dor atras dos olhos').
+sintoma_paciente(24, 'dor de cabeca').
+sintoma_paciente(24, 'dor no peito').
+sintoma_paciente(24, 'exantema').
+sintoma_paciente(24, 'formigamento').
+sintoma_paciente(24, 'falta de ar').
+sintoma_paciente(24, 'fraqueza').
+sintoma_paciente(24, 'fraqueza extrema').
+sintoma_paciente(24, 'febre alta').
+sintoma_paciente(24, 'manchas vermelhas').
+sintoma_paciente(24, 'mudanca de humor').
+sintoma_paciente(24, 'nausea').
+sintoma_paciente(24, 'perda de paladar').
+sintoma_paciente(24, 'perda de olfato').
+sintoma_paciente(24, 'perda de visao').
+sintoma_paciente(24, 'perda de peso').
+sintoma_paciente(24, 'sudorese').
+sintoma_paciente(24, 'sede').
+sintoma_paciente(24, 'tremor').
+sintoma_paciente(24, 'tosse frequente').
+sintoma_paciente(24, 'tontura').
+sintoma_paciente(24, 'ictericia').
+sintoma_paciente(24, 'erupcao cutanea').
+sintoma_paciente(24, 'dor articular').
+sintoma_paciente(24, 'anemia').
+sintoma_paciente(24, 'retracao gengival').
+sintoma_paciente(25, 'dificuldade de respirar').
+sintoma_paciente(25, 'dor muscular').
+sintoma_paciente(25, 'dor de cabeca').
+sintoma_paciente(25, 'dor no peito').
+sintoma_paciente(25, 'falta de ar').
+sintoma_paciente(25, 'fraqueza').
+sintoma_paciente(25, 'nausea').
+sintoma_paciente(7, 'dor atras dos olhos').
+sintoma_paciente(7, 'fraqueza extrema').
+sintoma_paciente(7, 'dor muscular').
