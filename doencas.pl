@@ -53,8 +53,8 @@ test(t1) :- diagnostico(3, masculino,
 :- end_tests(diag).
 
 % Dadas as informações do paciente, dá o Resultado que consiste em uma
-% lista de listas de tamanho dois, onde o primeiro elemento é o nome da doença
-% e o segundo elemento é a probabilidade do paciente ter a doença.
+% lista, onde cada elemento é outra lista, com os elementos nesta ordem:
+% [Doenca, Probabilidade, CntSintomasPaciente, CntSintomasDoenca, CntSintomasCaracteristicos]
 diagnostico(Idade, Genero, Sintomas, Resultado) :-
     findall(D, doenca(D), Doencas),
     diagnostico(Doencas, Idade, Genero, Sintomas, Unsorted),
@@ -74,9 +74,14 @@ diagnostico([D | Rest], Idade, Genero, Sintomas, Resultado) :-
                 * (1.5 ** CntSintCarac)
                 * (0.9 ** CntAusenteComum)
                 * (0.5 ** CntAusenteCarac),
-    (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance)),
 
-    append(ResultadoRest, [[D, FinalChance]], Resultado).
+    (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance)),
+    CntTotalDoenca is CntSintComum + CntSintCarac + CntAusenteComum + CntAusenteCarac,
+    CntTotalPac is CntSintComum + CntSintCarac,
+
+    append(ResultadoRest,
+           [[D, FinalChance, CntTotalPac, CntTotalDoenca, CntSintCarac]],
+           Resultado).
 
 
 % Diagnósticos básicos de cada doença. É básico pois considera apenas idade e genero.
@@ -94,7 +99,7 @@ diagnostico('febre amarela', _, _, Chance, NewChance) :- indiferent(Chance, NewC
 diagnostico('chikungunya', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
 diagnostico('leishmaniose', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
 
-compare_second_element(Order, [_, X], [_, Y]) :-
+compare_second_element(Order, [_, X | _], [_, Y | _]) :-
     compare(O, X, Y),
     (O = (=) -> Order = (>) ; Order = O).
 

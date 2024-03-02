@@ -7,7 +7,7 @@ patient(2, 'Raquel', 27, 'feminino').
 patient(3, 'Armelia', 23, 'feminino').
 patient(4, 'Michel', 22, 'masculino').
 patient(6, 'Enzo', 2, 'masculino').
-patient(20, 'Asmatico', 12, 'masculino').
+patient(1, 'Asmatico', 12, 'masculino').
 patient(21, 'Osteoporatico', 80, 'feminino').
 patient(22, 'Febre amareloso', 29, 'masculino').
 patient(23, 'Eu', 21, 'masculino').
@@ -22,10 +22,10 @@ sintoma_paciente(17, 'conjuntivite').
 sintoma_paciente(17, 'coriza').
 sintoma_paciente(6, 'calafrio').
 sintoma_paciente(6, 'chiado ao respirar').
-sintoma_paciente(20, 'chiado ao respirar').
-sintoma_paciente(20, 'dificuldade de respirar').
-sintoma_paciente(20, 'tosse frequente').
-sintoma_paciente(20, 'falta de ar').
+sintoma_paciente(1, 'chiado ao respirar').
+sintoma_paciente(1, 'dificuldade de respirar').
+sintoma_paciente(1, 'tosse frequente').
+sintoma_paciente(1, 'falta de ar').
 sintoma_paciente(21, 'retracao gengival').
 sintoma_paciente(22, 'ictericia').
 sintoma_paciente(22, 'fraqueza').

@@ -23,14 +23,14 @@ main :-
                              MainDialog,
                              IdSelected?selection),
         send(BtnEdit, message, ActionEdit),
-        send(BtnEdit, colour, dark_green),
+        send(BtnEdit, colour, dark_blue),
     send(BtnGroup, append, BtnEdit),
 
     new(BtnDiagnostico, button('Diagnosticar')),
         ActionDiagnostico = message(@prolog, on_diagnostico_click,
                                     IdSelected?selection),
         send(BtnDiagnostico, message, ActionDiagnostico),
-        send(BtnDiagnostico, colour, dark_green),
+        send(BtnDiagnostico, colour, dark_blue),
     send(BtnGroup, append, BtnDiagnostico),
 
     new(BtnDelete, button('Deletar')),
@@ -45,13 +45,14 @@ main :-
         ActionCadastro = message(@prolog, cadastro,
                                  MainDialog, '-1'),
         send(BtnCadastro, message, ActionCadastro),
-        send(BtnCadastro, colour, dark_green),
+        send(BtnCadastro, colour, dark_blue),
     send(MainDialog, append, BtnCadastro),
     send(MainDialog, display, BtnCadastro, point(300, 57)),
 
     list_patients(MainDialog, ListGroup),
 
     new(BtnCancel, button('Sair')),
+        send(BtnCancel, colour, red),
         send(BtnCancel, message, message(@prolog, on_cancel_click, MainDialog)),
     send(MainDialog, append, BtnCancel),
     send(MainDialog, display, BtnCancel, point(200, ListGroup?height + ListGroup?y + 20)),
@@ -90,9 +91,10 @@ cadastro(MainDialog, IdString) :-
                                Idade?selection,
                                Genero?selection,
                                List)),
-    send(BtnSalvar, colour, dark_green),
+    send(BtnSalvar, colour, dark_blue),
 
     new(BtnCancel, button('Cancelar')),
+        send(BtnCancel, colour, red),
         send(BtnCancel, message, message(@prolog, on_cancel_click, Dialog)),
     send(Dialog, append, BtnCancel),
 
@@ -150,27 +152,44 @@ on_diagnostico_click(IdAtom) :-
     format(atom(PatString), 'Nome: ~w\nIdade: ~w\nGenero: ~w', [Nome, Idade, Genero]),
     send(PatGroup, append, new(_, text(PatString))),
 
-    send(Dialog, append, new(SintGroup, dialog_group('Sintomas'))),
+    send(PatGroup, append, new(SintGroup, dialog_group('Sintomas'))),
     findall(S, sintoma_paciente(Id, S), Sintomas),
     atomic_list_concat(Sintomas, '\n', SintomaText),
     send(SintGroup, append, new(_, text(SintomaText))),
-    send(Dialog, display, SintGroup, point(180,76)),
 
-    diagnostico(Idade, Genero, Sintomas, Result),
-    format_sintomas(Result, DiagResultList),
-    atomic_list_concat(DiagResultList, '\n', DiagText),
+    diagnostico(Idade, Genero, Sintomas, Diagnostico),
+    writeln(Diagnostico),
     send(Dialog, append, new(ProbGroup, dialog_group('Probabilidades (%):'))),
-    send(ProbGroup, append, new(_, text(DiagText))),
-    send(Dialog, display, ProbGroup, point(0,76)),
+    append_sint(Diagnostico, ProbGroup),
+    send(Dialog, display, ProbGroup, point(230,8)),
 
     send(Dialog, open).
 
-format_sintomas([], []).
-format_sintomas([[D, Prob] | R], Result) :-
-    format_sintomas(R, RestResult),
-    format(atom(Text), '~w: ~w', [D, Prob]),
-    append(RestResult, [Text], Result).
 
+append_sint(Sin, G) :-
+    length(Sin, Len),
+    Y is 35 * Len,
+    send(G, append, new(T, text('Escolha um item para ver detalhes'))),
+    send(G, display, T, point(0, 0)),
+    send(T, colour, red),
+    append_sint(Sin, G, Y, T).
+
+append_sint([], _, _, _).
+append_sint([[D, Prob, CntTotalP, CntTotalD, CntCarac] | R], G, Y, T) :-
+    NewY is Y - 35,
+    append_sint(R, G, NewY, T),
+    format(atom(Text), '~w: ~w', [D, Prob]),
+    send(G, append, new(Label, text(Text))),
+    send(G, display, Label, point(0,Y)),
+    new(Btn, button('?')),
+    send(G, append, Btn),
+    send(G, display, Btn, point(230, Label?y)),
+    send(Btn, message, message(@prolog, on_interrogation_click,
+                               T, D, CntTotalP, CntTotalD, CntCarac)).
+
+on_interrogation_click(Text, D, CntTotalP, CntTotalD, CntCarac) :-
+    format(atom(T), '~w/~w sintomas, ~w sao carac. de ~w', [CntTotalP, CntTotalD, CntCarac, D]),
+    send(Text, string, T).
 
 :- main.
 
