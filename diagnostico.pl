@@ -1,5 +1,7 @@
 :- use_module(library(plunit)).
 
+:- include('doencas.pl').
+
 
 % age_type(+Age, ?Type) is semidet
 % é true se Type corresponde à faixa estária determinada por Age:
@@ -16,10 +18,10 @@ test(t7) :- age_type(100, idoso).
 test(t8, fail) :- age_type(1000, teste).
 :- end_tests(agetype).
 
-age_type(Age, crianca) :- !, Age < 12.
-age_type(Age, jovem) :- !, Age >= 12, Age < 30.
-age_type(Age, adulto) :- !, Age >= 30, Age < 60.
-age_type(Age, idoso) :- !, Age >= 60.
+age_type(Age, crianca) :- Age < 12, !.
+age_type(Age, jovem) :- Age >= 12, Age < 30, !.
+age_type(Age, adulto) :- Age >= 30, Age < 60, !.
+age_type(Age, idoso) :- Age >= 60, !.
 
 
 likely(Chance, NewChance) :- NewChance is Chance * 1.2.
@@ -51,9 +53,7 @@ only_female(masculino, _, NewChance) :- NewChance is 0.
 only_female(feminino,  _, _).
 
 % diagnostico_comuns(+Idade, +Genero, +Sintomas, ?R) is nondet
-% é true
 :- begin_tests(diag).
-
 test(t0) :- diagnostico_comuns(3, masculino,
     ['chiado ao respirar', 'dificultade de respirar', 'tosse frequente', 'falta de ar'],
     [[asma | _] | _]).
@@ -61,7 +61,6 @@ test(t0) :- diagnostico_comuns(3, masculino,
 test(t1) :- diagnostico_comuns(3, feminino,
     ['chiado ao respirar'],
     [[asma | _] | _]).
-
 :- end_tests(diag).
 
 % Dadas as informações do paciente, dá o Resultado que consiste em uma
@@ -92,7 +91,7 @@ diagnostico([D | Rest], Idade, Genero, Sintomas, Resultado) :-
                 * (0.8 ** CntAusenteComum)
                 * (0.25 ** CntAusenteCarac),
 
-    (doenca_rara(D) -> FinalChance is Calc / 100 ; (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance))),
+    (doenca_rara(D) -> Calc2 is Calc / 100, truncate(Calc2, FinalChance) ; (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance))),
     CntTotalDoenca is CntSintComum + CntSintCarac + CntAusenteComum + CntAusenteCarac,
     CntTotalPac is CntSintComum + CntSintCarac,
 

@@ -18,6 +18,7 @@ patient(26, '1', 1, 'masculino').
 patient(27, '1', 1, 'masculino').
 patient(28, '1', 1, 'masculino').
 patient(29, '1', 1, 'masculino').
+patient(30, 'Guatemala', 13, 'masculino').
 sintoma_paciente(17, 'conjuntivite').
 sintoma_paciente(17, 'coriza').
 sintoma_paciente(6, 'calafrio').
@@ -78,3 +79,7 @@ sintoma_paciente(25, 'nausea').
 sintoma_paciente(7, 'dor atras dos olhos').
 sintoma_paciente(7, 'fraqueza extrema').
 sintoma_paciente(7, 'dor muscular').
+sintoma_paciente(30, 'dor de cabeca').
+sintoma_paciente(30, 'dor muscular').
+sintoma_paciente(30, 'dificuldade para engolir').
+sintoma_paciente(30, 'dor articular').

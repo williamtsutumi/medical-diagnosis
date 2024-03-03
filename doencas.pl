@@ -1,4 +1,3 @@
-:- use_module(library(plunit)).
 
 
 doenca('malaria').
@@ -162,4 +161,5 @@ sintoma('cistinose', 'vomito').
 sintoma('cistinose', 'prisão de ventre').
 sintoma('cistinose', 'lacrimejo').
 sintoma('cistinose', 'fotofobia').
+
 

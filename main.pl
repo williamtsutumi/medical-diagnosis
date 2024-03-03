@@ -1,7 +1,5 @@
 :- use_module(library(pce)).
 :- use_module(library(plunit)).
-:- include('patients_crud.pl').
-:- include('diagnostico.pl').
 
 
 :- dynamic(patient/4).
@@ -9,10 +7,12 @@
 :- dynamic(diag_comum/1).
 :- dynamic(diag_raras/1).
 
+:- include('patients_crud.pl').
+:- include('diagnostico.pl').
+
 % GUI
 main :-
     consult('patients.txt'),
-    consult('doencas.pl'),
 
     new(MainDialog, dialog('Register')),
     send(MainDialog, scrollbars, both),
@@ -155,7 +155,6 @@ on_delete_click(MainDialog, Id) :-
 
 % GUI
 on_diagnostico_click(IdAtom) :-
-    writeln(a),
     atom_number(IdAtom, Id),
     patient(Id, Nome, Idade, Genero),
 
@@ -205,7 +204,7 @@ on_diagnostico_click(IdAtom) :-
     send(BtnCancel, colour, red),
     send(BtnCancel, message, message(@prolog, on_cancel_click, D)),
     send(D, append, BtnCancel),
-    send(D, display, BtnCancel, point(250, 520)),
+    send(D, display, BtnCancel, point(250, 430)),
 
     send(D, open).
 
