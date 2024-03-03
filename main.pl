@@ -1,10 +1,15 @@
 :- use_module(library(pce)).
+:- use_module(library(plunit)).
 :- include('patients_crud.pl').
+:- include('diagnostico.pl').
 
 
 :- dynamic(patient/4).
 :- dynamic(sintoma_paciente/2).
+:- dynamic(diag_comum/1).
+:- dynamic(diag_raras/1).
 
+% GUI
 main :-
     consult('patients.txt'),
     consult('doencas.pl'),
@@ -60,6 +65,7 @@ main :-
     send(MainDialog, open).
 
 
+% GUI
 cadastro(MainDialog, IdString) :-
     new(Dialog, dialog('Cadastro de paciente')),
     send(Dialog, append, new(Nome, text_item(nome))),
@@ -102,9 +108,11 @@ cadastro(MainDialog, IdString) :-
     send(Dialog, append, BtnSalvar),
     send(Dialog, open).
 
+% GUI
 on_cancel_click(Dialog) :-
     send(Dialog, destroy).
 
+% GUI
 on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero, List) :-
     get(List, selection, SelectionChain),
     chain_list(SelectionChain, References),
@@ -115,10 +123,12 @@ on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero, List) :-
     send(Dialog, destroy),
     main.
 
+% GUI
 get_item_label(Reference, Label) :-
     get(Reference, label, Label).
 
 
+% GUI
 list_patients(MainDialog, G) :-
     retractall(patient(_,_,_,_)),
     consult('patients.txt'),
@@ -128,6 +138,7 @@ list_patients(MainDialog, G) :-
     send(G, append, new(_, text(String))),
     send(MainDialog, display, G, point(0, 115)).
 
+% GUI
 get_patients_string([], '').
 get_patients_string([patient(Id, Nome, Idade, Genero) | R], String) :-
     format(atom(Text), 'Id: ~w, Nome: ~w, Idade: ~w, Genero: ~w\n', [Id, Nome, Idade, Genero]),
@@ -135,20 +146,23 @@ get_patients_string([patient(Id, Nome, Idade, Genero) | R], String) :-
     atom_concat(Text, RestString, String).
 
 
+% GUI
 on_delete_click(MainDialog, Id) :-
     delete_patient(Id),
     send(MainDialog, destroy),
     main.
 
 
+% GUI
 on_diagnostico_click(IdAtom) :-
+    writeln(a),
     atom_number(IdAtom, Id),
     patient(Id, Nome, Idade, Genero),
 
-    new(Dialog, dialog('Diagnostico')),
-    send(Dialog, scrollbars, both),
+    new(D, dialog('Diagnostico')),
+    send(D, scrollbars, both),
 
-    send(Dialog, append, new(PatGroup, dialog_group('Paciente'))),
+    send(D, append, new(PatGroup, dialog_group('Paciente'))),
     format(atom(PatString), 'Nome: ~w\nIdade: ~w\nGenero: ~w', [Nome, Idade, Genero]),
     send(PatGroup, append, new(_, text(PatString))),
 
@@ -157,40 +171,105 @@ on_diagnostico_click(IdAtom) :-
     atomic_list_concat(Sintomas, '\n', SintomaText),
     send(SintGroup, append, new(_, text(SintomaText))),
 
-    diagnostico(Idade, Genero, Sintomas, Diagnostico),
-    writeln(Diagnostico),
-    send(Dialog, append, new(ProbGroup, dialog_group('Probabilidades (%):'))),
-    append_sint(Diagnostico, ProbGroup),
-    send(Dialog, display, ProbGroup, point(230,8)),
+    diagnostico_comuns(Idade, Genero, Sintomas, Diag),
+    retractall(diag_comum(_)),
+    assert(diag_comum(Diag)),
 
-    send(Dialog, open).
+    diagnostico_raras(Idade, Genero, Sintomas, DiagRaras),
+    retractall(diag_raras(_)),
+    assert(diag_raras(DiagRaras)),
 
+    send(D, append, new(G, dialog_group('Diagnostico comum:'))),
+    send(D, display, G, point(230, 0)),
+    send(G, append, new(B, list_browser)),
+    send(B, size, size(30, 20)),
+    append_prob(Diag, B),
 
-append_sint(Sin, G) :-
-    length(Sin, Len),
-    Y is 35 * Len,
-    send(G, append, new(T, text('Escolha um item para ver detalhes'))),
-    send(G, display, T, point(0, 0)),
+    send(G, append, new(T, text('Selecione uma doença\npara ver mais detalhes'))),
     send(T, colour, red),
-    append_sint(Sin, G, Y, T).
+    send(G, append, new(Q, button('Explicar'))),
+    send(Q, message, message(@prolog, on_explicar_click, T, B, false)),
 
-append_sint([], _, _, _).
-append_sint([[D, Prob, CntTotalP, CntTotalD, CntCarac] | R], G, Y, T) :-
-    NewY is Y - 35,
-    append_sint(R, G, NewY, T),
-    format(atom(Text), '~w: ~w', [D, Prob]),
-    send(G, append, new(Label, text(Text))),
-    send(G, display, Label, point(0,Y)),
-    new(Btn, button('?')),
-    send(G, append, Btn),
-    send(G, display, Btn, point(230, Label?y)),
-    send(Btn, message, message(@prolog, on_interrogation_click,
-                               T, D, CntTotalP, CntTotalD, CntCarac)).
+    send(D, append, new(Graras, dialog_group('Diagnostico raras:'))),
+    send(D, display, Graras, point(500, 0)),
+    send(Graras, append, new(Braras, list_browser)),
+    send(Braras, size, size(30, 20)),
+    append_prob(DiagRaras, Braras),
 
-on_interrogation_click(Text, D, CntTotalP, CntTotalD, CntCarac) :-
-    format(atom(T), '~w/~w sintomas, ~w sao carac. de ~w', [CntTotalP, CntTotalD, CntCarac, D]),
-    send(Text, string, T).
+    send(Graras, append, new(Traras, text('Selecione uma doença\npara ver mais detalhes'))),
+    send(Traras, colour, red),
+    send(Graras, append, new(Qraras, button('Explicar'))),
+    send(Qraras, message, message(@prolog, on_explicar_click, Traras, Braras, true)),
+
+    new(BtnCancel, button('Sair')),
+    send(BtnCancel, colour, red),
+    send(BtnCancel, message, message(@prolog, on_cancel_click, D)),
+    send(D, append, BtnCancel),
+    send(D, display, BtnCancel, point(250, 520)),
+
+    send(D, open).
+
+    
+% GUI
+append_prob([], _).
+append_prob([[D, Prob, _, _, _] | R], B) :-
+    append_prob(R, B),
+    format(atom(Text), ' ~w : ~w%', [D, Prob]),
+    send(B, append, Text).
+
+% GUI
+on_explicar_click(T, B, IsRares) :-
+    (IsRares -> diag_raras(Diag) ; diag_comum(Diag)),
+    get(B, selection, Reference),
+    get(B, member, Reference, Selection),
+    get(Selection, label, Item),
+
+    split_string(Item, ":", none, [D | _]),
+    trim(D, Doenca),
+    find_sint(Diag, [Doenca, _, CntSintP, CntSintD, CntCarac]),
+    format(string(New), 'Possui ~w/~w sintomas de ~w.\n~w são características.', [CntSintP, CntSintD, Doenca, CntCarac]),
+    send(T, clear),
+    send(T, append, New).
+
+
+% find_sint(Lst, X)
+% é true se X é algum elemento qualquer da lista Lst.
+:- begin_tests(finds).
+test(t0) :- find_sint([a, b, c], a).
+test(t1, fail) :- find_sint([a, b, c], d).
+test(t2) :- find_sint([[asma, 10, 0, 1, 0], [osteoporose, 5, 0, 1, 0]], [asma, 10, 0, 1, 0]).
+:- end_tests(finds).
+
+find_sint([F | _], F) :- !.
+find_sint([_ | R], X) :-
+    find_sint(R, X).
+
+
+% trim(+Str, ?R)
+% é true se R é um átomo em que seu conteúdo é a string Str sem espaços a esquerda e a direita.
+:- begin_tests(trimstring).
+test(t0) :- trim("febre amarela  ", 'febre amarela').
+test(t1) :- trim("   febre amarela", 'febre amarela').
+test(t2) :- trim("   febre amarela  ", 'febre amarela').
+:- end_tests(trimstring).
+
+trim(Str, Result) :-
+    string(Str),
+    string_chars(Str, List),
+    triml(List, Tl),
+    trimr(Tl, Trimed),
+    atomic_list_concat(Trimed, '', Result).
+
+triml([], []).
+triml([F | R], Trimed) :-
+    (code_type(F, space) -> triml(R, Trimed) ; append([F], R, Trimed)).
+
+trimr([], []).
+trimr([F | R], Trimed) :-
+    trimr(R, Rtrim),
+    length(Rtrim, Len),
+    (Len > 0 -> append([F], Rtrim, Trimed)
+    ;   (code_type(F, space) -> Trimed = Rtrim ; append([F], Rtrim, Trimed))).
+
 
 :- main.
-
-

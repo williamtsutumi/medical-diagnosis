@@ -1,147 +1,4 @@
 :- use_module(library(plunit)).
-:- use_module(library(clpfd)).
-
-
-% todo -> teste
-% Classifica pessoas em faixas etárias de acordo com a idade. Requer que Age >= 0
-age_type(Age, crianca) :- Age >= 0, Age < 12.
-age_type(Age, jovem) :- Age >= 12, Age < 30.
-age_type(Age, adulto) :- Age >= 30, Age < 60.
-age_type(Age, idoso) :- Age >= 60.
-
-initial_chance(Chance) :- Chance is 0.5.
-
-likely(Chance, NewChance) :- NewChance is Chance * 1.2.
-indiferent(Chance, NewChance) :- NewChance is Chance.
-unlikely(Chance, NewChance) :- NewChance is Chance * 0.8.
-very_unlikely(Chance, NewChance) :- NewChance is Chance * 0.5.
-impossible(_, NewChance) :- NewChance is 0.
-
-likely_older(Age, Chance, NewChance) :- integer(Age), age_type(Age, Type), likely_older(Type, Chance, NewChance).
-likely_older(crianca, Chance, NewChance) :- impossible(Chance, NewChance).
-likely_older(jovem, Chance, NewChance) :- very_unlikely(Chance, NewChance).
-likely_older(adulto, Chance, NewChance) :- unlikely(Chance, NewChance).
-likely_older(idoso, Chance, NewChance) :- indiferent(Chance, NewChance).
-
-likely_younger(Age, Chance, NewChance) :- integer(Age), age_type(Age, Type), likely_younger(Type, Chance, NewChance).
-likely_younger(crianca, Chance, NewChance) :- indiferent(Chance, NewChance).
-likely_younger(jovem, Chance, NewChance) :- unlikely(Chance, NewChance).
-likely_younger(adulto, Chance, NewChance) :- very_unlikely(Chance, NewChance).
-likely_younger(idoso, Chance, NewChance) :- impossible(Chance, NewChance).
-
-likely_male(masculino, Chance, NewChance) :- NewChance is Chance * 1.3.
-likely_male(feminino, Chance, NewChance) :- NewChance is Chance * 0.7.
-only_male(masculino, _, _).
-only_male(feminino, _, NewChance) :- NewChance is 0.
-
-likely_female(masculino, Chance, NewChance) :- NewChance is Chance * 0.7.
-likely_female(feminino, Chance, NewChance) :- NewChance is Chance * 1.3.
-only_female(masculino, _, NewChance) :- NewChance is 0.
-only_female(feminino, _, _).
-
-% todo -> teste
-:- begin_tests(diag).
-
-test(t0) :- diagnostico(3, masculino,
-    ['chiado ao respirar', 'dificultade de respirar', 'tosse frequente', 'falta de ar'],
-    [[asma, 100] | _]).
-
-test(t1) :- diagnostico(3, masculino,
-    ['chiado ao respirar'],
-    [[asma, _] | _]).
-
-:- end_tests(diag).
-
-% Dadas as informações do paciente, dá o Resultado que consiste em uma
-% lista, onde cada elemento é outra lista, com os elementos nesta ordem:
-% [Doenca, Probabilidade, CntSintomasPaciente, CntSintomasDoenca, CntSintomasCaracteristicos]
-diagnostico(Idade, Genero, Sintomas, Resultado) :-
-    findall(D, doenca(D), Doencas),
-    diagnostico(Doencas, Idade, Genero, Sintomas, Unsorted),
-    predsort(compare_second_element, Unsorted, Resultado).
-
-diagnostico([], _, _, _, []).
-diagnostico([D | Rest], Idade, Genero, Sintomas, Resultado) :-
-    diagnostico(Rest, Idade, Genero, Sintomas, ResultadoRest),
-
-    initial_chance(ChanceI),
-    diagnostico(D, Idade, Genero, ChanceI, BasicChance),
-    count_sintomas(D, Sintomas, CntSintComum, CntSintCarac),
-    count_sintomas_ausentes(D, Sintomas, CntAusenteComum, CntAusenteCarac),
-
-    Calc is 100 * BasicChance
-                * (1.2 ** CntSintComum)
-                * (1.5 ** CntSintCarac)
-                * (0.9 ** CntAusenteComum)
-                * (0.5 ** CntAusenteCarac),
-
-    (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance)),
-    CntTotalDoenca is CntSintComum + CntSintCarac + CntAusenteComum + CntAusenteCarac,
-    CntTotalPac is CntSintComum + CntSintCarac,
-
-    append(ResultadoRest,
-           [[D, FinalChance, CntTotalPac, CntTotalDoenca, CntSintCarac]],
-           Resultado).
-
-
-% Diagnósticos básicos de cada doença. É básico pois considera apenas idade e genero.
-diagnostico('malaria', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('sarampo', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('covid19', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('dengue', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('diabetes', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('hipertensao', Age, _, Chance, NewChance) :- likely_older(Age, Chance, NewChance).
-diagnostico('cancer', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('avc', Age, _, Chance, NewChance) :- likely_older(Age, Chance, NewChance).
-diagnostico('asma', Age, _, Chance, NewChance) :- likely_younger(Age, Chance, NewChance).
-diagnostico('osteoporose', Age, Gender, Chance, NewChance) :- likely_older(Age, Chance, NewChance1), likely_female(Gender, NewChance1, NewChance).
-diagnostico('febre amarela', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('chikungunya', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-diagnostico('leishmaniose', _, _, Chance, NewChance) :- indiferent(Chance, NewChance).
-
-compare_second_element(Order, [_, X | _], [_, Y | _]) :-
-    compare(O, X, Y),
-    (O = (=) -> Order = (>) ; Order = O).
-
-truncate(Num, R) :-
-    R is round(Num * 100) / 100.
-
-% todo -> teste
-% Para uma dada Doenca e uma lista de sintomas:
-% CntSintComum é a quantidade de sintomas comuns da doença que aparecem na lista de sintomas.
-% CntSintCarac é a quantidade de sintomas não comuns da doença que aparecem na lista de sintomas.
-count_sintomas(_, [], 0, 0).
-count_sintomas(Doenca, [Sintoma | R], CntSintComum, CntSintCarac) :-
-    count_sintomas(Doenca, R, CntSintComumR, CntSintCaracR),
-    (sintoma(Doenca, Sintoma) ->
-        (sintoma_comum(Sintoma) ->
-            CntSintComum is CntSintComumR + 1,
-            CntSintCarac is CntSintCaracR
-        ;   CntSintComum is CntSintComumR,
-            CntSintCarac is CntSintCaracR + 1)
-        ;   CntSintComum is CntSintComumR,
-            CntSintCarac is CntSintCaracR).
-
-% todo -> teste
-% Dada a doença D e os SintomasPaciente:
-% CntAusenteComum é a quantidade de sintomas comuns da doença que não aparecem na lista de sintomas.
-% CntAusenteCarac é a quantidade de sintomas não comuns da doença que não aparecem na lista de sintomas.
-count_sintomas_ausentes(D, SintomasPaciente, CntAusenteComum, CntAusenteCarac) :-
-    atom(D),
-    findall(S, sintoma(D, S), SintomasDoenca),
-    count_sintomas_ausentes(SintomasDoenca, SintomasPaciente, CntAusenteComum, CntAusenteCarac).
-
-count_sintomas_ausentes([], _, 0, 0).
-count_sintomas_ausentes([SintDoenca | Rdoenca], SintomasPaciente, CntAusenteComum, CntAusenteCarac) :-
-    count_sintomas_ausentes(Rdoenca, SintomasPaciente, CntAusenteComumR, CntAusenteCaracR),
-    (member(SintDoenca, SintomasPaciente) ->
-        CntAusenteComum is CntAusenteComumR,
-        CntAusenteCarac is CntAusenteCaracR
-    ;   (sintoma_comum(SintDoenca) ->
-            CntAusenteComum is CntAusenteComumR + 1,
-            CntAusenteCarac is CntAusenteCaracR
-        ;   CntAusenteComum is CntAusenteComumR,
-            CntAusenteCarac is CntAusenteCaracR + 1)).
 
 
 doenca('malaria').
@@ -157,6 +14,11 @@ doenca('osteoporose').
 doenca('febre amarela').
 doenca('chikungunya').
 doenca('leishmaniose').
+
+doenca_rara('acromegalia').
+doenca_rara('fibrose cistica').
+doenca_rara('fenilcetonuria').
+doenca_rara('cistinose').
 
 sintoma('calafrio').
 sintoma('chiado ao respirar').
@@ -191,15 +53,35 @@ sintoma('erupcao cutanea').
 sintoma('dor articular').
 sintoma('anemia').
 sintoma('retracao gengival').
+sintoma('suor excessivo').
+sintoma('crescimento de membros cartilaginosos').
+sintoma('infecção pulmonar recorrente').
+sintoma('sinusite recorrente').
+sintoma('tosse com sangue').
+sintoma('dificuldade de respirar').
+sintoma('suor salgado').
+sintoma('vomito').
+sintoma('convulsão').
+sintoma('mal odor corporal').
+sintoma('deficiencia intelectual').
+sintoma('prisão de ventre').
+sintoma('dificuldade para engolir').
+sintoma('lacrimejo').
+sintoma('fotofobia').
 
 sintoma_comum('dor de cabeca').
 sintoma_comum('tosse').
 sintoma_comum('coriza').
 sintoma_comum('febre').
 sintoma_comum('nausea').
+sintoma_comum('vomito').
 sintoma_comum('tontura').
+sintoma_comum('diarreia').
+sintoma_comum('falta de ar').
+sintoma_comum('dor muscular').
+sintoma_comum('dor articular').
+sintoma_comum('dificuldade de respirar').
 
-% Relação entre doencas e sintomas        
 sintoma('febre amarela', 'febre alta').
 sintoma('febre amarela', 'dor muscular').
 sintoma('febre amarela', 'dor de cabeca').
@@ -259,5 +141,25 @@ sintoma('asma', 'dificuldade de respirar').
 sintoma('asma', 'chiado ao respirar').
 sintoma('asma', 'falta de ar').
 sintoma('osteoporose', 'retracao gengival').
-
+sintoma('acromegalia', 'crescimento de membros cartilaginosos').
+sintoma('acromegalia', 'dor articular').
+sintoma('acromegalia', 'suor excessivo').
+sintoma('fibrose cistica', 'suor salgado').
+sintoma('fibrose cistica', 'diarreia').
+sintoma('fibrose cistica', 'pneumonia').
+sintoma('fibrose cistica', 'falta de ar').
+sintoma('fibrose cistica', 'dificuldade de respirar').
+sintoma('fibrose cistica', 'chiado ao respirar').
+sintoma('fibrose cistica', 'sinusite recorrente').
+sintoma('fibrose cistica', 'tosse com sangue').
+sintoma('fibrose cistica', 'infecção pulmonar recorrente').
+sintoma('fenilcetonuria', 'vomito').
+sintoma('fenilcetonuria', 'nausea').
+sintoma('fenilcetonuria', 'mal odor corporal').
+sintoma('fenilcetonuria', 'deficiencia intelectual').
+sintoma('cistinose', 'dificuldade para engolir').
+sintoma('cistinose', 'vomito').
+sintoma('cistinose', 'prisão de ventre').
+sintoma('cistinose', 'lacrimejo').
+sintoma('cistinose', 'fotofobia').
 
