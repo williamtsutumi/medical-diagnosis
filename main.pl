@@ -6,6 +6,7 @@
 :- dynamic(sintoma_paciente/2).
 :- dynamic(diag_comum/1).
 :- dynamic(diag_raras/1).
+:- dynamic(sint_pat/1).
 
 :- include('patients_crud.pl').
 :- include('diagnostico.pl').
@@ -24,41 +25,34 @@ main :-
     send(MainDialog, append, new(BtnGroup, dialog_group('Selecione'))),
     send(BtnGroup, append, new(IdSelected, text_item(id))),
     new(BtnEdit, button('Visualizar')),
-        ActionEdit = message(@prolog, cadastro,
-                             MainDialog,
-                             IdSelected?selection),
-        send(BtnEdit, message, ActionEdit),
-        send(BtnEdit, colour, dark_blue),
+    ActionEdit = message(@prolog, cadastro, MainDialog, IdSelected?selection),
+    send(BtnEdit, message, ActionEdit),
+    send(BtnEdit, colour, dark_blue),
     send(BtnGroup, append, BtnEdit),
 
     new(BtnDiagnostico, button('Diagnosticar')),
-        ActionDiagnostico = message(@prolog, on_diagnostico_click,
-                                    IdSelected?selection),
-        send(BtnDiagnostico, message, ActionDiagnostico),
-        send(BtnDiagnostico, colour, dark_blue),
+    ActionDiagnostico = message(@prolog, on_diagnostico_click, IdSelected?selection),
+    send(BtnDiagnostico, message, ActionDiagnostico),
+    send(BtnDiagnostico, colour, dark_blue),
     send(BtnGroup, append, BtnDiagnostico),
 
     new(BtnDelete, button('Deletar')),
-        ActionDelete = message(@prolog, on_delete_click,
-                               MainDialog,
-                               IdSelected?selection),
-        send(BtnDelete, message, ActionDelete),
+    ActionDelete = message(@prolog, on_delete_click, MainDialog, IdSelected?selection),
+    send(BtnDelete, message, ActionDelete),
     send(BtnDelete, colour, red),
     send(BtnGroup, append, BtnDelete),
 
     new(BtnCadastro, button('Cadastrar')),
-        ActionCadastro = message(@prolog, cadastro,
-                                 MainDialog, '-1'),
-        send(BtnCadastro, message, ActionCadastro),
-        send(BtnCadastro, colour, dark_blue),
+    ActionCadastro = message(@prolog, cadastro, MainDialog, '-1'), send(BtnCadastro, message, ActionCadastro),
+    send(BtnCadastro, colour, dark_blue),
     send(MainDialog, append, BtnCadastro),
     send(MainDialog, display, BtnCadastro, point(300, 57)),
 
     list_patients(MainDialog, ListGroup),
 
     new(BtnCancel, button('Sair')),
-        send(BtnCancel, colour, red),
-        send(BtnCancel, message, message(@prolog, on_cancel_click, MainDialog)),
+    send(BtnCancel, colour, red),
+    send(BtnCancel, message, message(@prolog, on_cancel_click, MainDialog)),
     send(MainDialog, append, BtnCancel),
     send(MainDialog, display, BtnCancel, point(200, ListGroup?height + ListGroup?y + 20)),
 
@@ -89,19 +83,12 @@ cadastro(MainDialog, IdString) :-
 
     new(BtnSalvar, button('Salvar')),
     send(BtnSalvar, message, message(@prolog, on_create_click,
-                               MainDialog,
-                               Dialog,
-                               'patients.txt',
-                               Id,
-                               Nome?selection,
-                               Idade?selection,
-                               Genero?selection,
-                               List)),
+        MainDialog, Dialog, 'patients.txt', Id, Nome?selection, Idade?selection, Genero?selection, List)),
     send(BtnSalvar, colour, dark_blue),
 
     new(BtnCancel, button('Cancelar')),
-        send(BtnCancel, colour, red),
-        send(BtnCancel, message, message(@prolog, on_cancel_click, Dialog)),
+    send(BtnCancel, colour, red),
+    send(BtnCancel, message, message(@prolog, on_cancel_click, Dialog)),
     send(Dialog, append, BtnCancel),
 
     send(List, size, size(50, List?height)),
@@ -123,6 +110,7 @@ on_create_click(MainDialog, Dialog, FileName, Id, Nome, Idade, Genero, List) :-
     send(Dialog, destroy),
     main.
 
+
 % GUI
 get_item_label(Reference, Label) :-
     get(Reference, label, Label).
@@ -137,6 +125,7 @@ list_patients(MainDialog, G) :-
     get_patients_string(Patients, String),
     send(G, append, new(_, text(String))),
     send(MainDialog, display, G, point(0, 115)).
+
 
 % GUI
 get_patients_string([], '').
@@ -170,6 +159,11 @@ on_diagnostico_click(IdAtom) :-
     atomic_list_concat(Sintomas, '\n', SintomaText),
     send(SintGroup, append, new(_, text(SintomaText))),
 
+    send(D, append, new(ExplGroup, dialog_group('Explicacao'))),
+    send(ExplGroup, append, new(_, text('Selecione um item'))),
+    get(SintGroup, bottom_side, Ycoord),
+    send(D, display, ExplGroup, point(0, Ycoord + 100)),
+
     diagnostico_comuns(Idade, Genero, Sintomas, Diag),
     retractall(diag_comum(_)),
     assert(diag_comum(Diag)),
@@ -177,6 +171,9 @@ on_diagnostico_click(IdAtom) :-
     diagnostico_raras(Idade, Genero, Sintomas, DiagRaras),
     retractall(diag_raras(_)),
     assert(diag_raras(DiagRaras)),
+
+    retractall(sint_pat(_)),
+    assert(sint_pat(Sintomas)),
 
     send(D, append, new(G, dialog_group('Diagnostico comum:'))),
     send(D, display, G, point(230, 0)),
@@ -187,7 +184,7 @@ on_diagnostico_click(IdAtom) :-
     send(G, append, new(T, text('Selecione uma doença\npara ver mais detalhes'))),
     send(T, colour, red),
     send(G, append, new(Q, button('Explicar'))),
-    send(Q, message, message(@prolog, on_explicar_click, T, B, false)),
+    send(Q, message, message(@prolog, on_explicar_click, T, B, ExplGroup, false)),
 
     send(D, append, new(Graras, dialog_group('Diagnostico raras:'))),
     send(D, display, Graras, point(500, 0)),
@@ -198,7 +195,7 @@ on_diagnostico_click(IdAtom) :-
     send(Graras, append, new(Traras, text('Selecione uma doença\npara ver mais detalhes'))),
     send(Traras, colour, red),
     send(Graras, append, new(Qraras, button('Explicar'))),
-    send(Qraras, message, message(@prolog, on_explicar_click, Traras, Braras, true)),
+    send(Qraras, message, message(@prolog, on_explicar_click, Traras, Braras, ExplGroup, true)),
 
     new(BtnCancel, button('Sair')),
     send(BtnCancel, colour, red),
@@ -216,8 +213,9 @@ append_prob([[D, Prob, _, _, _] | R], B) :-
     format(atom(Text), ' ~w : ~w%', [D, Prob]),
     send(B, append, Text).
 
+
 % GUI
-on_explicar_click(T, B, IsRares) :-
+on_explicar_click(T, B, Group, IsRares) :-
     (IsRares -> diag_raras(Diag) ; diag_comum(Diag)),
     get(B, selection, Reference),
     get(B, member, Reference, Selection),
@@ -228,7 +226,22 @@ on_explicar_click(T, B, IsRares) :-
     find_sint(Diag, [Doenca, _, CntSintP, CntSintD, CntCarac]),
     format(string(New), 'Possui ~w/~w sintomas de ~w.\n~w são características.', [CntSintP, CntSintD, Doenca, CntCarac]),
     send(T, clear),
-    send(T, append, New).
+    send(T, append, New),
+
+    sint_pat(SintP),
+    findall(S, sintoma(Doenca, S), SintD),
+    send(Group, clear),
+    write_explain(SintD, SintP, Group, 0).
+
+
+% GUI
+write_explain([], _, _, _).
+write_explain([S | R], SintP, Group, Y) :-
+    NewY is Y + 20,
+    write_explain(R, SintP, Group, NewY),
+    send(Group, append, new(T, text(S))),
+    send(Group, display, T, point(15, Y)),
+    (member(S, SintP) -> send(T, colour, dark_green) ; send(T, colour, red)).
 
 
 % find_sint(Lst, X)
@@ -271,3 +284,4 @@ trimr([F | R], Trimed) :-
     ;   (code_type(F, space) -> Trimed = Rtrim ; append([F], Rtrim, Trimed))).
 
 
+:- main.
