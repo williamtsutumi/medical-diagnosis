@@ -52,20 +52,7 @@ likely_female(feminino,  Chance, NewChance) :- likely(Chance, NewChance).
 only_female(masculino, _, NewChance) :- NewChance is 0.
 only_female(feminino,  _, _).
 
-% diagnostico_comuns(+Idade, +Genero, +Sintomas, ?R) is nondet
-:- begin_tests(diag).
-test(t0) :- diagnostico_comuns(3, masculino,
-    ['chiado ao respirar', 'dificultade de respirar', 'tosse frequente', 'falta de ar'],
-    [[asma | _] | _]).
 
-test(t1) :- diagnostico_comuns(3, feminino,
-    ['chiado ao respirar'],
-    [[asma | _] | _]).
-:- end_tests(diag).
-
-% Dadas as informações do paciente, dá o Resultado que consiste em uma
-% lista, onde cada elemento é outra lista, com os elementos nesta ordem:
-% [Doenca, Probabilidade, CntSintomasPaciente, CntSintomasDoenca, CntSintomasCaracteristicos]
 diagnostico_comuns(Idade, Genero, Sintomas, R) :-
     findall(D, doenca(D), Doencas),
     diagnostico_todas(Doencas, Idade, Genero, Sintomas, R).
@@ -73,9 +60,29 @@ diagnostico_raras(Idade, Genero, Sintomas, R) :-
     findall(D, doenca_rara(D), Doencas),
     diagnostico_todas(Doencas, Idade, Genero, Sintomas, R).
 
+
+% diagnostico_todas(+Doencas, +Idade, +Genero, +Sintomas, ?R) is nondet
+% Dadas as informações do paciente, dá o Resultado que consiste em uma
+% lista, onde cada elemento é outra lista, com os elementos nesta ordem:
+% [Doenca, Probabilidade, CntSintP, CntSintD, CntSintCarac]
+% onde: CntSintP é a quantidade de sintomas de Doenca que o paciente possui
+% CntSintD é a quantidade de sintomas da doenca
+% CntSintCarac é a quantidade de sintomas não comuns de Doenca que o paciente possui
+:- begin_tests(diag).
+test(t0) :- diagnostico_comuns(3, masculino, ['chiado ao respirar', 'dificultade de respirar', 'tosse frequente', 'falta de ar'], R),
+    reverse(R, Reversed),
+    assertion(Reversed = [[asma | _] | _]).
+
+test(t1) :- diagnostico_comuns(3, feminino, ['chiado ao respirar'], R),
+    reverse(R, Reversed),
+    assertion(Reversed = [[asma | _] | _]).
+
+:- end_tests(diag).
+
 diagnostico_todas(Doencas, Idade, Genero, Sintomas, Resultado) :-
     diagnostico(Doencas, Idade, Genero, Sintomas, Unsorted),
-    predsort(compare_second_element, Unsorted, Resultado).
+    predsort(compare_second_element, Unsorted, Sorted),
+    Resultado = Sorted.
 
 diagnostico([], _, _, _, []).
 diagnostico([D | Rest], Idade, Genero, Sintomas, Resultado) :-
@@ -85,13 +92,19 @@ diagnostico([D | Rest], Idade, Genero, Sintomas, Resultado) :-
     count_sintomas(D, Sintomas, CntSintComum, CntSintCarac),
     count_sintomas_ausentes(D, Sintomas, CntAusenteComum, CntAusenteCarac),
 
-    Calc is 100 * BasicChance
+    (doenca_rara(D) ->
+        Calc is 100 * BasicChance
+                * (1.1 ** CntSintComum)
+                * (1.3 ** CntSintCarac)
+                * (0.7 ** CntAusenteComum)
+                * (0.2 ** CntAusenteCarac)
+    ;   Calc is 100 * BasicChance
                 * (1.2 ** CntSintComum)
                 * (1.5 ** CntSintCarac)
                 * (0.8 ** CntAusenteComum)
-                * (0.25 ** CntAusenteCarac),
+                * (0.4 ** CntAusenteCarac)),
 
-    (doenca_rara(D) -> Calc2 is Calc / 100, truncate(Calc2, FinalChance) ; (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance))),
+    (Calc > 100 -> FinalChance is 100 ; truncate(Calc, FinalChance)),
     CntTotalDoenca is CntSintComum + CntSintCarac + CntAusenteComum + CntAusenteCarac,
     CntTotalPac is CntSintComum + CntSintCarac,
 
@@ -123,14 +136,31 @@ compare_second_element(Order, [_, X | _], [_, Y | _]) :-
     compare(O, X, Y),
     (O = (=) -> Order = (>) ; Order = O).
 
+ 
+% trucate(+Num, ?R) is semidet
+% é true se R é o número Num arredondado e com apenas dois dígitos após a vírgula
+:- begin_tests(trunc).
+test(t0) :- truncate(1, 1).
+test(t1) :- truncate(1.2, 1.2).
+test(t2) :- truncate(1.239, 1.24).
+test(t3) :- truncate(28.8471008, 28.85).
+:- end_tests(trunc).
+
 truncate(Num, R) :-
     R is round(Num * 100) / 100.
 
-% todo -> teste
-% Para uma dada Doenca e uma lista de sintomas:
-% CntSintComum é a quantidade de sintomas comuns da doença que aparecem na lista de sintomas.
-% CntSintCarac é a quantidade de sintomas não comuns da doença que aparecem na lista de sintomas.
-count_sintomas(_, [], 0, 0).
+
+% count_sintomas(+Doenca, +Sintomas, ?CntComum, ?CntCarac) is nondet
+% é true se CntComum e CntCarac são a quantidade de sintomas comuns
+% e a quantidade de sintomas nãocomuns de Doenca, respectivamente,
+% presentes na lista Sintomas
+:- begin_tests(cntsint).
+test(t0) :- count_sintomas(asma, ['chiado ao respirar'], 0, 1).
+test(t1) :- count_sintomas(asma, ['chiado ao respirar', 'falta de ar'], 1, 1).
+test(t2) :- count_sintomas(hipertensao, ['visao embacada', 'dor de cabeca', 'tontura'], 2, 1).
+:- end_tests(cntsint).
+
+count_sintomas(_, [], 0, 0) :- !.
 count_sintomas(Doenca, [Sintoma | R], CntSintComum, CntSintCarac) :-
     count_sintomas(Doenca, R, CntSintComumR, CntSintCaracR),
     (sintoma(Doenca, Sintoma) ->
@@ -142,25 +172,33 @@ count_sintomas(Doenca, [Sintoma | R], CntSintComum, CntSintCarac) :-
         ;   CntSintComum is CntSintComumR,
             CntSintCarac is CntSintCaracR).
 
-% todo -> teste
-% Dada a doença D e os SintomasPaciente:
-% CntAusenteComum é a quantidade de sintomas comuns da doença que não aparecem na lista de sintomas.
-% CntAusenteCarac é a quantidade de sintomas não comuns da doença que não aparecem na lista de sintomas.
-count_sintomas_ausentes(D, SintomasPaciente, CntAusenteComum, CntAusenteCarac) :-
+
+% count_sintomas_ausentes(+Doenca, +Sintomas, ?CntComum, ?CntCarac) is nondet
+% é true se CntComum e CntCarac são a quantidade de sintomas comuns de Doenca
+% e a quantidade de sintomas não comuns de Doenca, respectivamente, tal que
+% o sintoma NAO aparece na lista Sintomas e sendo, portanto, um sintoma ausente.
+:- begin_tests(cntaus).
+test(t0) :- count_sintomas_ausentes(asma, ['chiado ao respirar'], 2, 1).
+test(t1) :- count_sintomas_ausentes(asma, ['chiado ao respirar', 'falta de ar'], 1, 1).
+test(t2) :- count_sintomas_ausentes(hipertensao, [], 2, 3).
+test(t3) :- count_sintomas_ausentes(hipertensao, ['dor de cabeca', 'tontura', 'dor no peito', 'fraqueza', 'visao embacada'], 0, 0).
+:- end_tests(cntaus).
+
+count_sintomas_ausentes(D, Sintomas, CntComum, CntCarac) :-
     atom(D),
-    findall(S, sintoma(D, S), SintomasDoenca),
-    count_sintomas_ausentes(SintomasDoenca, SintomasPaciente, CntAusenteComum, CntAusenteCarac).
+    findall(S, sintoma(D, S), SintomasD),
+    count_sintomas_ausentes(SintomasD, Sintomas, CntComum, CntCarac).
 
 count_sintomas_ausentes([], _, 0, 0).
-count_sintomas_ausentes([SintDoenca | Rdoenca], SintomasPaciente, CntAusenteComum, CntAusenteCarac) :-
-    count_sintomas_ausentes(Rdoenca, SintomasPaciente, CntAusenteComumR, CntAusenteCaracR),
-    (member(SintDoenca, SintomasPaciente) ->
-        CntAusenteComum is CntAusenteComumR,
-        CntAusenteCarac is CntAusenteCaracR
-    ;   (sintoma_comum(SintDoenca) ->
-            CntAusenteComum is CntAusenteComumR + 1,
-            CntAusenteCarac is CntAusenteCaracR
-        ;   CntAusenteComum is CntAusenteComumR,
-            CntAusenteCarac is CntAusenteCaracR + 1)).
+count_sintomas_ausentes([SintD | Rd], SintP, CntComum, CntCarac) :-
+    count_sintomas_ausentes(Rd, SintP, CntComumR, CntCaracR),
+    (member(SintD, SintP) ->
+        CntComum is CntComumR,
+        CntCarac is CntCaracR
+    ;   (sintoma_comum(SintD) ->
+            CntComum is CntComumR + 1,
+            CntCarac is CntCaracR
+        ;   CntComum is CntComumR,
+            CntCarac is CntCaracR + 1)).
 
 

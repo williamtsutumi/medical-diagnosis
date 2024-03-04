@@ -6,7 +6,6 @@ doenca('covid19').
 doenca('dengue').
 doenca('diabetes').
 doenca('hipertensao').
-doenca('cancer').
 doenca('avc').
 doenca('asma').
 doenca('osteoporose').
@@ -67,6 +66,8 @@ sintoma('prisão de ventre').
 sintoma('dificuldade para engolir').
 sintoma('lacrimejo').
 sintoma('fotofobia').
+sintoma('deformidade em ossos').
+sintoma('postura curvada').
 
 sintoma_comum('dor de cabeca').
 sintoma_comum('tosse').
@@ -129,7 +130,6 @@ sintoma('hipertensao', 'tontura').
 sintoma('hipertensao', 'dor no peito').
 sintoma('hipertensao', 'fraqueza').
 sintoma('hipertensao', 'visao embacada').
-sintoma('cancer', 'tudo').
 sintoma('avc', 'dor de cabeca').
 sintoma('avc', 'formigamento').
 sintoma('avc', 'perda de visao').
@@ -140,6 +140,8 @@ sintoma('asma', 'dificuldade de respirar').
 sintoma('asma', 'chiado ao respirar').
 sintoma('asma', 'falta de ar').
 sintoma('osteoporose', 'retracao gengival').
+sintoma('osteoporose', 'deformidade em ossos').
+sintoma('osteoporose', 'postura curvada').
 sintoma('acromegalia', 'crescimento de membros cartilaginosos').
 sintoma('acromegalia', 'dor articular').
 sintoma('acromegalia', 'suor excessivo').

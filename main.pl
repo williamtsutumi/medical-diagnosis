@@ -271,4 +271,3 @@ trimr([F | R], Trimed) :-
     ;   (code_type(F, space) -> Trimed = Rtrim ; append([F], Rtrim, Trimed))).
 
 
-:- main.
